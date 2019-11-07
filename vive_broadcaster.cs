@@ -90,13 +90,13 @@ class vive_pose
 public class vive_broadcaster : MonoBehaviour
 {
 
-    //public string IP = "10.134.71.22";
-    public string IP = "10.134.71.216";
+    public string IP = "10.134.71.22";
 
     private Socket sock;
     private IPEndPoint sendEp;
 
     private string outputString;
+    private bool twoControllers;
 
     private short loopCount = 0;
 
@@ -110,6 +110,7 @@ public class vive_broadcaster : MonoBehaviour
     private Transform transformL;
     private Transform transformR;
 
+    // TODO: Remove these
     public Vector3 testPos;
     public Quaternion testOrient;
 
@@ -141,6 +142,14 @@ public class vive_broadcaster : MonoBehaviour
     {
         // TODO: Figure out why controller connection is not registering
 
+        bool leftConnected = contrStatesL.poseAction.GetDeviceIsConnected(contrStatesL.handType);
+        bool rightConnected = contrStatesR.poseAction.GetDeviceIsConnected(contrStatesR.handType);
+
+        if (!(leftConnected || rightConnected))
+        {
+            return;
+        }
+
         bool triggerStop = contrStatesL.stop || contrStatesR.stop;
         if (triggerStop)
         {
@@ -169,18 +178,22 @@ public class vive_broadcaster : MonoBehaviour
         testPos = poseR.current_pose.position;
         testOrient = poseR.current_pose.orientation;
 
+        // Output string formats: 
+        // twoControllers?;pos.x,y,z;quat.w,x,y,z;grab?;clutch?;
+        // twoContr?;[poseR];[poseL];grab?;clutch?;
         outputString = "";
 
-        bool leftConnected = contrStatesL.poseAction.GetDeviceIsConnected(contrStatesL.handType);
-        if (leftConnected)
-        {
-            outputString += PoseOutput(poseL);
-        }
+        twoControllers = leftConnected && rightConnected;
+        outputString += String.Format("{0};", Convert.ToUInt16(twoControllers));
 
-        bool rightConnected = contrStatesR.poseAction.GetDeviceIsConnected(contrStatesR.handType);
         if (rightConnected)
         {
             outputString += PoseOutput(poseR);
+        }
+
+        if (leftConnected)
+        {
+            outputString += PoseOutput(poseL);
         }
 
         outputString += GrabOutput();
