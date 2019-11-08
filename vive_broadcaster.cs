@@ -70,19 +70,19 @@ class vive_pose
     public void UpdateCurrentPose(Transform transform)
     {
         current_pose.position = transform.position;
-        current_pose.orientation = transform.rotation;
+        current_pose.orientation = new Quaternion(0, 0, 0, 1); //transform.rotation;
 
         // Offset position to initial frame
         current_pose.position -= initial_pose.position;
-        current_pose.position = Quaternion.Inverse(current_pose.orientation) *
+        current_pose.position = Quaternion.Inverse(initial_pose.orientation) *
             current_pose.position;
 
-        current_pose.orientation = QuaternionUtil.DispQ(initial_pose.orientation,
-            current_pose.orientation);
+        //current_pose.orientation = QuaternionUtil.DispQ(initial_pose.orientation,
+            //current_pose.orientation);
 
         // Convert to robot frame
         current_pose.position = UnityToRobotFramePosition(current_pose.position);
-        current_pose.orientation = UnityToRobotFrameOrientation(current_pose.orientation);
+        //current_pose.orientation = UnityToRobotFrameOrientation(current_pose.orientation);
     }
 }
 
@@ -90,7 +90,7 @@ class vive_pose
 public class vive_broadcaster : MonoBehaviour
 {
 
-    public string IP = "10.134.71.22";
+    public string IP;
 
     private Socket sock;
     private IPEndPoint sendEp;
