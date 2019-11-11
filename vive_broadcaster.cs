@@ -53,36 +53,36 @@ class vive_pose
 
     private Vector3 UnityToRobotFramePosition(Vector3 p)
     {
-        return new Vector3(-p.y, -p.x, p.z);
+        return new Vector3(p.y, p.x, p.z);
     }
 
     private Quaternion UnityToRobotFrameOrientation(Quaternion q)
     {
-        Quaternion qRot = Quaternion.Euler(0.0f, 0.0f, -90.0f);
-        Quaternion rotQuat = QuaternionUtil.rotateQuaternion(q, qRot);
-        Vector3 eulerAngles = rotQuat.eulerAngles;
-        Vector3 newEuler = new Vector3(eulerAngles.x, -eulerAngles.y,
-            -eulerAngles.z);
-
-        return Quaternion.Euler(newEuler);
+        Vector3 eulerAngles = q.eulerAngles;
+        Vector3 newEuler = new Vector3(-eulerAngles.y, -eulerAngles.x, -eulerAngles.z);
+        Quaternion newQuat = new Quaternion
+        {
+            eulerAngles = newEuler
+        };
+        return newQuat;
     }
 
     public void UpdateCurrentPose(Transform transform)
     {
         current_pose.position = transform.position;
-        current_pose.orientation = new Quaternion(0, 0, 0, 1); //transform.rotation;
+        current_pose.orientation = transform.rotation;
 
         // Offset position to initial frame
         current_pose.position -= initial_pose.position;
         current_pose.position = Quaternion.Inverse(initial_pose.orientation) *
             current_pose.position;
 
-        //current_pose.orientation = QuaternionUtil.DispQ(initial_pose.orientation,
-            //current_pose.orientation);
+        current_pose.orientation = QuaternionUtil.DispQ(initial_pose.orientation,
+            current_pose.orientation);
 
         // Convert to robot frame
         current_pose.position = UnityToRobotFramePosition(current_pose.position);
-        //current_pose.orientation = UnityToRobotFrameOrientation(current_pose.orientation);
+        current_pose.orientation = UnityToRobotFrameOrientation(current_pose.orientation);
     }
 }
 
@@ -109,11 +109,6 @@ public class vive_broadcaster : MonoBehaviour
     private List<vive_buttons> controllers;
     private Transform transformL;
     private Transform transformR;
-
-    // TODO: Remove these
-    public Vector3 testPos;
-    public Quaternion testOrient;
-
 
     void Start()
     {
@@ -174,9 +169,6 @@ public class vive_broadcaster : MonoBehaviour
 
         poseL.UpdateCurrentPose(transformL);
         poseR.UpdateCurrentPose(transformR);
-
-        testPos = poseR.current_pose.position;
-        testOrient = poseR.current_pose.orientation;
 
         // Output string formats: 
         // twoControllers?;pos.x,y,z;quat.w,x,y,z;grab?;clutch?;
